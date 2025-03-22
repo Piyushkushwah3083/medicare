@@ -11,6 +11,9 @@
       "src": "/api/create-account",
       "dest": "api/create-account.js"
     }
-  ]
+  ],
+  "env": {
+    "MONGODB_URI": "mongodb+srv://piyushkushwah3083:<db_password>@cluster0.ppfns.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+  }
   
 }
