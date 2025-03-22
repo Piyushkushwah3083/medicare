@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/create-account.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "env": {
+    "MONGODB_URI": "mongodb+srv://piyushkushwah3083:<db_password>@cluster0.ppfns.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+  }
+}
