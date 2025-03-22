@@ -1,48 +1,68 @@
-// Import required modules
+const express = require('express');
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
+const bodyParser = require('body-parser');
 
-// Connect to MongoDB (use environment variable for connection string)
-mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log('Connected to MongoDB!'))
-  .catch((err) => console.error('Failed to connect to MongoDB:', err));
+const app = express();
+const port = 3000;
 
-// Define the Mongoose schema and model
-const dataSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  age: { type: Number, required: true }
+// Middleware to parse JSON bodies
+app.use(bodyParser.json());
+
+// Connect to MongoDB
+mongoose.connect('mongodb://localhost:27017/userDB', { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => console.log('Connected to MongoDB'))
+  .catch((err) => console.log('Failed to connect to MongoDB:', err));
+
+// User Schema definition
+const userSchema = new mongoose.Schema({
+  username: { type: String, required: true, unique: true },
+  email: { type: String, required: true, unique: true },
+  phoneNumber: { type: String, required: true },
+  password: { type: String, required: true }
 });
 
-const Data = mongoose.model('Data', dataSchema);
+// User model
+const User = mongoose.model('User', userSchema);
 
-// This is the Vercel serverless function handler
-module.exports = async (req, res) => {
-  if (req.method === 'POST') {
-    const { name, age } = req.body;
+// POST API to create a new user account
+app.post('/api/create-account', async (req, res) => {
+  const { username, email, phoneNumber, password } = req.body;
 
-    if (!name || !age) {
-      return res.status(400).json({ message: 'Name and Age are required!' });
+  try {
+    // Check if all required fields are provided
+    if (!username || !email || !phoneNumber || !password) {
+      return res.status(400).json({ message: 'All fields are required' });
     }
 
-    try {
-      // Create a new document from the request data
-      const newData = new Data({
-        name,
-        age
-      });
-
-      // Save the data to MongoDB
-      await newData.save();
-
-      // Respond with a success message
-      res.status(201).json({
-        message: 'Data saved successfully!',
-        data: newData
-      });
-    } catch (error) {
-      console.error('Error saving data to MongoDB:', error);
-      res.status(500).json({ message: 'Internal server error' });
+    // Check if the email or username already exists
+    const existingUser = await User.findOne({ $or: [{ email }, { username }] });
+    if (existingUser) {
+      return res.status(400).json({ message: 'Email or username already exists' });
     }
-  } else {
-    res.status(405).json({ message: 'Method Not Allowed' });
+
+    // Hash the password before saving
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create a new user
+    const newUser = new User({
+      username,
+      email,
+      phoneNumber,
+      password: hashedPassword
+    });
+
+    // Save the user to the database
+    await newUser.save();
+
+    res.status(201).json({ message: 'User account created successfully' });
+  } catch (error) {
+    console.error('Error creating user:', error);
+    res.status(500).json({ message: 'Server error' });
   }
-};
+});
+
+// Start the server
+app.listen(port, () => {
+  console.log(`Server is running on http://localhost:${port}`);
+});
