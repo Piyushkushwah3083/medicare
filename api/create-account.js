@@ -19,10 +19,9 @@ async function connectToDatabase() {
     console.log('Connected to MongoDB');
   } catch (error) {
     console.error('MongoDB connection error:', error);
-    throw error;
+    throw new Error('Failed to connect to MongoDB');
   }
 }
-
 
 // User Schema definition
 const userSchema = new mongoose.Schema({
@@ -69,8 +68,10 @@ module.exports = async (req, res) => {
 
       res.status(201).json({ message: 'User account created successfully' });
     } catch (error) {
+      // Log the detailed error
       console.error('Error creating user:', error);
-      res.status(500).json({ message: 'Server error' });
+      // Send a more descriptive error response
+      res.status(500).json({ message: `Server error: ${error.message}` });
     }
   } else {
     res.status(405).json({ message: 'Method Not Allowed' });
