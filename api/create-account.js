@@ -7,13 +7,22 @@ let isConnected = false;
 async function connectToDatabase() {
   if (isConnected) return;
 
-  await mongoose.connect(process.env.MONGODB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  });
-  isConnected = true;
-  console.log('Connected to MongoDB');
+  try {
+    // MongoDB connection URI from Vercel environment variable
+    await mongoose.connect(process.env.MONGODB_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      serverSelectionTimeoutMS: 5000, // Timeout to select the server (5 seconds)
+      socketTimeoutMS: 45000,         // Timeout for operations (45 seconds)
+    });
+    isConnected = true;
+    console.log('Connected to MongoDB');
+  } catch (error) {
+    console.error('MongoDB connection error:', error);
+    throw error;
+  }
 }
+
 
 // User Schema definition
 const userSchema = new mongoose.Schema({
