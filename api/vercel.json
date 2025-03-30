@@ -17,6 +17,6 @@
   },
 
   "env": {
-    "MONGODB_URI": "mongodb+srv://piyushkushwah3083:Pkush@1532@cluster0.ctqsd.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+    "MONGODB_URI": "mongodb+srv://piyushkushwah3083:sQSHqXhm2Wqkq0hi@cluster0.ctqsd.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
   }
 }
