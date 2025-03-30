@@ -3,17 +3,23 @@
   "builds": [
     {
       "src": "api/create-account.js",
-      "use": "@vercel/node",
-      "config": { "timeout": 30 }
+      "use": "@vercel/node"
     },
     {
       "src": "api/login.js",
-      "use": "@vercel/node",
-      "config": { "timeout": 30 }
+      "use": "@vercel/node"
     }
   ],
   "routes": [
-    { "src": "/api/create-account", "dest": "api/create-account.js" },
-    { "src": "/api/login", "dest": "api/login.js" }
+    {
+      "src": "/api/create-account",
+      "dest": "api/create-account.js",
+      "timeout": 60
+    },
+    {
+      "src": "/api/login",
+      "dest": "api/login.js",
+      "timeout": 60
+    }
   ]
 }
