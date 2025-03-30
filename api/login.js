@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const User = require('./models/user');
+const User = require('../models/user'); // Adjust the path if needed
+const connectToDatabase = require('../utils'); // Ensure the database connection
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') {
@@ -10,6 +11,8 @@ module.exports = async (req, res) => {
   const { email, password } = req.body;
 
   try {
+    await connectToDatabase(); // Ensure database connection
+
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(400).json({ message: 'Invalid credentials' });
@@ -21,9 +24,9 @@ module.exports = async (req, res) => {
     }
 
     // Generate a new JWT token
-    const token = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ email: user.email, id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
 
-    // Save token to the user's tokens array
+    // Store token in user's document
     user.tokens.push({ token });
     await user.save();
 
