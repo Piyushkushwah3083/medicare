@@ -1,47 +1,36 @@
+require('dotenv').config();
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const User = require('./models/user'); // Assuming User schema is in models/User.js
 
-// Connect to MongoDB
+// MongoDB Connection
 let isConnected = false;
-
 async function connectToDatabase() {
   if (isConnected) return;
-
   try {
-    // MongoDB connection URI from Vercel environment variable
     await mongoose.connect(process.env.MONGODB_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
-      serverSelectionTimeoutMS: 5000, // Timeout to select the server (5 seconds)
-      socketTimeoutMS: 45000,         // Timeout for operations (45 seconds)
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
     });
     isConnected = true;
-    console.log('Connected to MongoDB');
+    console.log('✅ Connected to MongoDB');
   } catch (error) {
-    console.error('MongoDB connection error:', error);
+    console.error('❌ MongoDB connection error:', error);
     throw new Error('Failed to connect to MongoDB');
   }
 }
 
-// User Schema definition
-const userSchema = new mongoose.Schema({
-  username: { type: String, required: true, unique: true },
-  email: { type: String, required: true, unique: true },
-  phoneNumber: { type: String, required: true },
-  password: { type: String, required: true }
-});
-
-const User = mongoose.model('User', userSchema);
-
+// User Registration API
 module.exports = async (req, res) => {
   if (req.method === 'POST') {
     const { username, email, phoneNumber, password } = req.body;
 
     try {
-      // Connect to the database
       await connectToDatabase();
 
-      // Check if all required fields are provided
       if (!username || !email || !phoneNumber || !password) {
         return res.status(400).json({ message: 'All fields are required' });
       }
@@ -52,25 +41,26 @@ module.exports = async (req, res) => {
         return res.status(400).json({ message: 'Email or username already exists' });
       }
 
-      // Hash the password before saving
+      // Hash the password
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      // Create a new user
+      // Generate JWT Token
+      const token = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '7d' });
+
+      // Create new user
       const newUser = new User({
         username,
         email,
         phoneNumber,
-        password: hashedPassword
+        password: hashedPassword,
+        tokens: [{ token }], // Store JWT token
       });
 
-      // Save the user to the database
       await newUser.save();
 
-      res.status(201).json({ message: 'User account created successfully' });
+      res.status(201).json({ message: 'User account created successfully', token });
     } catch (error) {
-      // Log the detailed error
       console.error('Error creating user:', error);
-      // Send a more descriptive error response
       res.status(500).json({ message: `Server error: ${error.message}` });
     }
   } else {
