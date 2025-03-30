@@ -33,6 +33,6 @@ module.exports = async (req, res) => {
     res.status(200).json({ message: 'Login successful', token });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error' ,error});
   }
 };
