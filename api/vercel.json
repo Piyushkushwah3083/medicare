@@ -4,6 +4,10 @@
     {
       "src": "api/create-account.js",
       "use": "@vercel/node"
+    },
+    {
+      "src": "api/login.js",
+      "use": "@vercel/node"
     }
   ],
   "routes": [
@@ -11,6 +15,10 @@
       "src": "/api/create-account",
       "dest": "api/create-account.js",
       "timeout": 30
+    },
+    {
+      "src": "/api/login",
+      "dest": "api/login.js"
     }
   ]
 }
