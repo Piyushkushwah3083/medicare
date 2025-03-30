@@ -18,7 +18,8 @@
     },
     {
       "src": "/api/login",
-      "dest": "api/login.js"
+      "dest": "api/login.js",
+      "timeout": 30
     }
   ]
 }
