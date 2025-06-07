@@ -8,6 +8,14 @@
     {
       "src": "api/login.js",
       "use": "@vercel/node"
+    },
+    {
+      "src": "api/get-profile.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "/api/update-password.js",
+      "use": "@vercel/node"
     }
   ],
   "routes": [
@@ -19,6 +27,16 @@
     {
       "src": "/api/login",
       "dest": "api/login.js",
+      "timeout": 60
+    },
+    {
+      "src": "/api/get-profile",
+      "dest": "api/get-profile.js",
+      "timeout": 60
+    },
+    {
+      "src": "/api/update-password",
+      "dest": "api/update-password.js",
       "timeout": 60
     }
   ]
