@@ -1,6 +1,6 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const User = require('../models/user'); // Adjust the path if needed
+const User = require('./models/user'); // Adjust the path if needed
 const connectToDatabase = require('../utils'); // Ensure the database connection
 
 module.exports = async (req, res) => {
