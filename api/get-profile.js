@@ -1,9 +1,8 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
-const User = require('./models/user'); // Adjust path as needed
+const User = require('./models/user');
 
-// MongoDB connection (reuse your function)
 let isConnected = false;
 async function connectToDatabase() {
   if (isConnected) return;
@@ -27,7 +26,6 @@ module.exports = async (req, res) => {
     try {
       await connectToDatabase();
 
-      // Get token from Authorization header
       const authHeader = req.headers.authorization;
       if (!authHeader || !authHeader.startsWith('Bearer ')) {
         return res.status(401).json({ message: 'Authorization token missing or invalid' });
@@ -35,7 +33,6 @@ module.exports = async (req, res) => {
 
       const token = authHeader.split(' ')[1];
 
-      // Verify JWT token
       let decoded;
       try {
         decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -43,13 +40,14 @@ module.exports = async (req, res) => {
         return res.status(401).json({ message: 'Invalid or expired token' });
       }
 
-      // Find user by email from token payload
-      const user = await User.findOne({ email: decoded.email }).select('-password -tokens -__v');
+      // Explicitly select desired fields including _id
+      const user = await User.findOne({ email: decoded.email }).select('username email phoneNumber labelname profilePhotoUrl _id');
 
       if (!user) {
         return res.status(404).json({ message: 'User not found' });
       }
 
+      // Send user data
       res.status(200).json({ user });
     } catch (error) {
       console.error('Error fetching user profile:', error);

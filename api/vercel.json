@@ -16,6 +16,10 @@
     {
       "src": "/api/update-password.js",
       "use": "@vercel/node"
+    },
+     {
+      "src": "/api/reset-password.js",
+      "use": "@vercel/node"
     }
   ],
   "routes": [
@@ -37,6 +41,11 @@
     {
       "src": "/api/update-password",
       "dest": "api/update-password.js",
+      "timeout": 60
+    },
+     {
+      "src": "/api/reset-password",
+      "dest": "api/reset-password.js",
       "timeout": 60
     }
   ]

@@ -2,7 +2,23 @@ require('dotenv').config();
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const User = require('./models/user'); // Assuming User schema is in models/User.js
+const formidable = require('formidable');
+const fs = require('fs');
+const path = require('path');
+const { createClient } = require('@supabase/supabase-js');
+const User = require('./models/user');
+
+// Supabase client
+const supabase = createClient(
+  'https://parwypfewrsnkqdbazmt.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBhcnd5cGZld3JzbmtxZGJhem10Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0OTc4MjE0OCwiZXhwIjoyMDY1MzU4MTQ4fQ.VnyLyLd7hcH12rrnSNMifTYJE40RZSO-LD19-EVeljk'
+);
+
+module.exports.config = {
+  api: {
+    bodyParser: false,
+  },
+};
 
 // MongoDB Connection
 let isConnected = false;
@@ -23,47 +39,94 @@ async function connectToDatabase() {
   }
 }
 
-// User Registration API
 module.exports = async (req, res) => {
-  if (req.method === 'POST') {
-    const { username, email, phoneNumber, password } = req.body;
+  if (req.method !== 'POST') {
+    return res.status(405).json({ message: 'Method Not Allowed' });
+  }
+
+  const form = new formidable.IncomingForm();
+
+  form.parse(req, async (err, fields, files) => {
+    if (err) {
+      return res.status(400).json({ message: 'Form parsing error' });
+    }
+
+    const username = fields.username?.[0];
+    const email = fields.email?.[0];
+    const phoneNumber = fields.phoneNumber?.[0];
+    const password = fields.password?.[0];
+    const labelname=fields.labelname?.[0];
+    const profilePhoto = files.profilePhoto?.[0]; // single file
+
+    if (!username || !email || !phoneNumber || !password||!labelname || !profilePhoto) {
+      return res.status(400).json({ message: 'All fields including profile photo are required' });
+    }
 
     try {
       await connectToDatabase();
 
-      if (!username || !email || !phoneNumber || !password) {
-        return res.status(400).json({ message: 'All fields are required' });
-      }
+      const existingUser = await User.findOne({
+        $or: [{ email }, { username }],
+      });
 
-      // Check if the email or username already exists
-      const existingUser = await User.findOne({ $or: [{ email }, { username }] });
       if (existingUser) {
         return res.status(400).json({ message: 'Email or username already exists' });
       }
 
-      // Hash the password
+      // Upload profile photo to Supabase
+      const fileExt = path.extname(profilePhoto.originalFilename);
+      const fileName = `profile_${Date.now()}${fileExt}`;
+      const fileBuffer = fs.readFileSync(profilePhoto.filepath);
+
+      const { error: uploadError } = await supabase.storage
+        .from('uploads')
+        .upload(fileName, fileBuffer, {
+          contentType: profilePhoto.mimetype,
+        });
+
+      if (uploadError) {
+        console.error('Supabase upload error:', uploadError);
+        return res.status(500).json({ message: 'Failed to upload profile photo' });
+      }
+
+      const { data: publicUrlData } = supabase
+        .storage
+        .from('uploads')
+        .getPublicUrl(fileName);
+
+      const profilePhotoUrl = publicUrlData.publicUrl;
+
+      // Hash password
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      // Generate JWT Token
-      const token = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '7d' });
+      // Create JWT
+      const token = jwt.sign({ email }, process.env.JWT_SECRET, {
+        expiresIn: '7d',
+      });
 
-      // Create new user
+      // Save user to DB
       const newUser = new User({
         username,
         email,
         phoneNumber,
         password: hashedPassword,
-        tokens: [{ token }], // Store JWT token
+        labelname,
+        profilePhotoUrl,
+        tokens: [{ token }],
+        isActive:true,
+        isDelete:false,
       });
 
       await newUser.save();
 
-      res.status(201).json({ message: 'User account created successfully', token });
+      res.status(201).json({
+        message: 'User account created successfully',
+        token,
+        profilePhotoUrl,
+      });
     } catch (error) {
       console.error('Error creating user:', error);
       res.status(500).json({ message: `Server error: ${error.message}` });
     }
-  } else {
-    res.status(405).json({ message: 'Method Not Allowed' });
-  }
+  });
 };
