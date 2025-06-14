@@ -53,12 +53,11 @@ module.exports = async (req, res) => {
 
     const username = fields.username?.[0];
     const email = fields.email?.[0];
-    const phoneNumber = fields.phoneNumber?.[0];
     const password = fields.password?.[0];
     const labelname=fields.labelname?.[0];
     const profilePhoto = files.profilePhoto?.[0]; // single file
 
-    if (!username || !email || !phoneNumber || !password||!labelname || !profilePhoto) {
+    if (!username || !email|| !password||!labelname || !profilePhoto) {
       return res.status(400).json({ message: 'All fields including profile photo are required' });
     }
 
@@ -100,7 +99,7 @@ module.exports = async (req, res) => {
       const hashedPassword = await bcrypt.hash(password, 10);
 
       // Create JWT
-      const token = jwt.sign({ email }, process.env.JWT_SECRET, {
+      const token = jwt.sign({ email ,profilePhotoUrl,username,}, process.env.JWT_SECRET, {
         expiresIn: '7d',
       });
 
@@ -108,7 +107,6 @@ module.exports = async (req, res) => {
       const newUser = new User({
         username,
         email,
-        phoneNumber,
         password: hashedPassword,
         labelname,
         profilePhotoUrl,

@@ -20,6 +20,18 @@
      {
       "src": "/api/reset-password.js",
       "use": "@vercel/node"
+    },
+     {
+      "src": "/api/create-post.js",
+      "use": "@vercel/node"
+    },
+     {
+      "src": "/api/get-posts.js",
+      "use": "@vercel/node"
+    },
+     {
+      "src": "/api/get-user-posts.js",
+      "use": "@vercel/node"
     }
   ],
   "routes": [
@@ -46,6 +58,21 @@
      {
       "src": "/api/reset-password",
       "dest": "api/reset-password.js",
+      "timeout": 60
+    },
+     {
+      "src": "/api/create-post",
+      "dest": "api/create-post.js",
+      "timeout": 60
+    },
+    {
+      "src": "/api/get-posts",
+      "dest": "api/get-posts.js",
+      "timeout": 60
+    },
+     {
+      "src": "/api/get-user-posts",
+      "dest": "api/get-user-posts.js",
       "timeout": 60
     }
   ]
