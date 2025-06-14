@@ -41,7 +41,7 @@ module.exports = async (req, res) => {
       }
 
       // Explicitly select desired fields including _id
-      const user = await User.findOne({ email: decoded.email }).select('username email labelname profilePhotoUrl _id');
+      const user = await User.findOne({ email: decoded.email }).select('username email phoneNumber labelname profilePhotoUrl _id');
 
       if (!user) {
         return res.status(404).json({ message: 'User not found' });
