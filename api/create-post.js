@@ -92,11 +92,14 @@ module.exports = async (req, res) => {
         profilePhoto: userData.profilePhotoUrl,
         description,
         media: mediaUrls,
-        likes:0,
+        likecount:0,
+        likes:[],
         commentsCounts:0,
         comments:[],
         saved:0,
-        shares:0
+        savedBy:[],
+        shares:0,
+        shareBy:[],
       });
 
       await newPost.save();

@@ -10,6 +10,15 @@ const userSchema = new mongoose.Schema({
   tokens: [{ token: String }],
   isActive:Boolean,
   isDelete:Boolean,
+  followers: [{ id: String, username: String, profilePhotoUrl: String }],
+  following: [{ id: String, username: String, profilePhotoUrl: String }],
+  requestsSent: [{ id: String, username: String, profilePhotoUrl: String }],
+  requestsReceived: [{ id: String, username: String, profilePhotoUrl: String }],
+  recentSearches: [
+  {
+    query: String,
+    searchedAt: { type: Date, default: Date.now },
+  },]
 });
 
 module.exports = mongoose.model("User", userSchema);
