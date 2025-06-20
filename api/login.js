@@ -24,7 +24,10 @@ module.exports = async (req, res) => {
     }
 
     // Generate a new JWT token
-    const token = jwt.sign({ email: user.email, id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ email: user.email,
+                            id: user._id,
+                            username: user.name,
+                            profilePhoto: user.profilePhoto,  }, process.env.JWT_SECRET, { expiresIn: '7d' });
 
     // Store token in user's document
     user.tokens.push({ token });
