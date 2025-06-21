@@ -2,19 +2,19 @@
   "version": 2,
   "builds": [
     {
-      "src": "api/login-signup/create-account.js",
+      "src": "api/create-account.js",
       "use": "@vercel/node"
     },
     {
-      "src": "api/login-signup/login.js",
+      "src": "api/login.js",
       "use": "@vercel/node"
     },
     {
-      "src": "api/login-signup/get-profile.js",
+      "src": "api/get-profile.js",
       "use": "@vercel/node"
     },
      {
-      "src": "/api/login-signup/reset-password.js",
+      "src": "/api/reset-password.js",
       "use": "@vercel/node"
     },
      {
@@ -40,39 +40,27 @@
     {
       "src": "/api/get-user-profile.js",
       "use": "@vercel/node"
-    },
-    {
-      "src": "/api/search/search-user.js",
-      "use": "@vercel/node"
-    },
-    {
-      "src": "/api/search/recent-search.js",
-      "use": "@vercel/node"
-    },
-      {
-      "src": "/api/login-signup/update-password.js",
-      "use": "@vercel/node"
     }
   ],
   "routes": [
     {
-      "src": "/api/login-signup/create-account",
-      "dest": "api/login-signup/create-account.js",
+      "src": "/api/create-account",
+      "dest": "api/create-account.js",
       "timeout": 60
     },
     {
-      "src": "/api/login-signup/login",
-      "dest": "api/login-signup/login.js",
+      "src": "/api/login",
+      "dest": "api/login.js",
       "timeout": 60
     },
     {
-      "src": "/api/login-signup/get-profile",
-      "dest": "api/login-signup/get-profile.js",
+      "src": "/api/get-profile",
+      "dest": "api/get-profile.js",
       "timeout": 60
     },
      {
-      "src": "/api/login-signup/reset-password",
-      "dest": "api/login-signup/reset-password.js",
+      "src": "/api/reset-password",
+      "dest": "api/reset-password.js",
       "timeout": 60
     },
      {
@@ -103,21 +91,6 @@
     {
       "src": "/api/get-user-profile",
       "dest": "api/get-user-profile.js",
-      "timeout": 60
-    },
-      {
-      "src": "/api/search/search-user",
-      "dest": "api/search/search-user.js",
-      "timeout": 60
-    },
-     {
-      "src": "/api/search/recent-search",
-      "dest": "api/search/recent-search.js",
-      "timeout": 60
-    },
-     {
-      "src": "/api/login-signup/update-password",
-      "dest": "api/login-signup/update-password.js",
       "timeout": 60
     }
   ]
