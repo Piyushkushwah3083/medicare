@@ -6,7 +6,7 @@ const formidable = require("formidable");
 const fs = require("fs");
 const path = require("path");
 const { createClient } = require("@supabase/supabase-js");
-const User = require("./models/user");
+const User = require("../models/user");
 
 // Supabase client
 const supabase = createClient(

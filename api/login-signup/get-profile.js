@@ -1,7 +1,7 @@
 require("dotenv").config();
 const mongoose = require("mongoose");
 const jwt = require("jsonwebtoken");
-const User = require("./models/user");
+const User = require("../models/user");
 
 let isConnected = false;
 async function connectToDatabase() {
