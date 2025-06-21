@@ -1,11 +1,11 @@
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-const User = require("./models/user"); // Adjust the path if needed
-const connectToDatabase = require("../utils"); // Ensure the database connection
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const User = require('./models/user'); // Adjust the path if needed
+const connectToDatabase = require('../utils'); // Ensure the database connection
 
 module.exports = async (req, res) => {
-  if (req.method !== "POST") {
-    return res.status(405).json({ message: "Method Not Allowed" });
+  if (req.method !== 'POST') {
+    return res.status(405).json({ message: 'Method Not Allowed' });
   }
 
   const { email, password } = req.body;
@@ -15,27 +15,24 @@ module.exports = async (req, res) => {
 
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(400).json({ message: "Invalid credentials" });
+      return res.status(400).json({ message: 'Invalid credentials' });
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      return res.status(400).json({ message: "Invalid credentials" });
+      return res.status(400).json({ message: 'Invalid credentials' });
     }
 
     // Generate JWT with required user data
     const token = jwt.sign(
       {
         email: user.email,
-
         id: user._id,
-        username: user.name,
-        profilePhoto: user.profilePhoto,
         username: user.username, // or user.username, depending on your schema
         profilePhotoUrl: user.profilePhotoUrl, // ensure this exists in User schema
       },
       process.env.JWT_SECRET,
-      { expiresIn: "7d" }
+      { expiresIn: '7d' }
     );
 
     // Store token in user's tokens array
@@ -43,7 +40,7 @@ module.exports = async (req, res) => {
     await user.save();
 
     res.status(200).json({
-      message: "Login successful",
+      message: 'Login successful',
       token,
       user: {
         name: user.name,
@@ -52,7 +49,7 @@ module.exports = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Login error:", error);
-    res.status(500).json({ message: "Server error", error });
+    console.error('Login error:', error);
+    res.status(500).json({ message: 'Server error', error });
   }
 };
