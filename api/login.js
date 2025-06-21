@@ -23,16 +23,33 @@ module.exports = async (req, res) => {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
-    // Generate a new JWT token
-    const token = jwt.sign({ email: user.email, id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    // Generate JWT with required user data
+    const token = jwt.sign(
+      {
+        email: user.email,
+        id: user._id,
+        username: user.username, // or user.username, depending on your schema
+        profilePhotoUrl: user.profilePhotoUrl, // ensure this exists in User schema
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
 
-    // Store token in user's document
+    // Store token in user's tokens array
     user.tokens.push({ token });
     await user.save();
 
-    res.status(200).json({ message: 'Login successful', token });
+    res.status(200).json({
+      message: 'Login successful',
+      token,
+      user: {
+        name: user.name,
+        email: user.email,
+        profilePhoto: user.profilePhoto,
+      },
+    });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ message: 'Server error' ,error});
+    res.status(500).json({ message: 'Server error', error });
   }
 };
