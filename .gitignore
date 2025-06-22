@@ -1,3 +1,4 @@
+# .gitignore
+serviceAccountKey.json
 .vercel
 .env
-serviceAccountKey.json
