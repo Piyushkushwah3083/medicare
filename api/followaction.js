@@ -2,6 +2,7 @@ require("dotenv").config();
 const mongoose = require("mongoose");
 const jwt = require("jsonwebtoken");
 const User = require("./models/user");
+const admin = require("../firebase");
 
 let isConnected = false;
 async function connectToDatabase() {
@@ -56,6 +57,7 @@ module.exports = async (req, res) => {
     };
 
     let actionMessage = "";
+    let notification = null;
 
     switch (action) {
       case "sendRequest": {
@@ -76,13 +78,13 @@ module.exports = async (req, res) => {
           me.requestsSent.push(targetData);
           target.requestsReceived.push(meData);
 
-          // ✅ Notification: Follow Request
-          target.notifications.push({
+          notification = {
             type: "follow_request",
             from: meData,
             message: `${meData.username} sent you a follow request`,
-          });
+          };
 
+          target.notifications.push(notification);
           actionMessage = "Follow request sent";
         }
         break;
@@ -105,13 +107,13 @@ module.exports = async (req, res) => {
           (u) => u.id !== meData.id
         );
 
-        // ✅ Notification: Request Accepted
-        target.notifications.push({
+        notification = {
           type: "request_accepted",
           from: meData,
           message: `${meData.username} accepted your follow request`,
-        });
+        };
 
+        target.notifications.push(notification);
         actionMessage = "Follow request accepted";
         break;
       }
@@ -121,6 +123,14 @@ module.exports = async (req, res) => {
         target.requestsReceived = target.requestsReceived.filter(
           (u) => u.id !== meData.id
         );
+
+        notification = {
+          type: "request_deleted",
+          from: meData,
+          message: `${meData.username} deleted the follow request`,
+        };
+
+        target.notifications.push(notification);
         actionMessage = "Follow request deleted";
         break;
       }
@@ -135,13 +145,13 @@ module.exports = async (req, res) => {
         me.following.push(targetData);
         target.followers.push(meData);
 
-        // ✅ Notification: Followed Back
-        target.notifications.push({
+        notification = {
           type: "follow_back",
           from: meData,
           message: `${meData.username} followed you back`,
-        });
+        };
 
+        target.notifications.push(notification);
         actionMessage = "Followed back successfully";
         break;
       }
@@ -158,6 +168,14 @@ module.exports = async (req, res) => {
 
         me.following = me.following.filter((u) => u.id !== targetData.id);
         target.followers = target.followers.filter((u) => u.id !== meData.id);
+
+        notification = {
+          type: "unfollow",
+          from: meData,
+          message: `${meData.username} unfollowed you`,
+        };
+
+        target.notifications.push(notification);
         actionMessage = "Unfollowed successfully";
         break;
       }
@@ -168,6 +186,25 @@ module.exports = async (req, res) => {
 
     await me.save();
     await target.save();
+
+    // ✅ Send FCM Notification if applicable
+    if (notification && target.fcmToken) {
+      try {
+        await admin.messaging().send({
+          token: target.fcmToken,
+          notification: {
+            title: "Notification",
+            body: notification.message,
+          },
+          data: {
+            type: notification.type,
+            fromUserId: meData.id,
+          },
+        });
+      } catch (error) {
+        console.error("FCM Error:", error.message);
+      }
+    }
 
     return res.status(200).json({ message: actionMessage, statuscode: 200 });
   } catch (err) {

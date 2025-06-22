@@ -2,6 +2,8 @@ require("dotenv").config();
 const mongoose = require("mongoose");
 const jwt = require("jsonwebtoken");
 const Post = require("./models/post");
+const User = require("./models/user");
+const admin = require("../firebase"); // Your initialized Firebase Admin instance
 
 let isConnected = false;
 async function connectToDatabase() {
@@ -31,7 +33,6 @@ module.exports = async (req, res) => {
   }
 
   const { postId, action, commentText } = req.body;
-
   if (!postId || !action) {
     return res.status(400).json({ message: "postId and action are required" });
   }
@@ -42,12 +43,15 @@ module.exports = async (req, res) => {
     if (!post) return res.status(404).json({ message: "Post not found" });
 
     const user = {
-      id: userData._id,
+      id: userData.id,
       name: userData.username,
       profilePhoto: userData.profilePhotoUrl,
     };
 
+    const postOwner = await User.findById(post.userId); // Assuming you store post owner ID in `userId`
+
     let updated = false;
+    let notification = null;
 
     switch (action) {
       case "like":
@@ -56,6 +60,11 @@ module.exports = async (req, res) => {
           post.likes.splice(likeIndex, 1);
         } else {
           post.likes.push(user);
+          notification = {
+            type: "like",
+            from: user,
+            message: `${user.name} liked your post`,
+          };
         }
         post.likecount = post.likes.length;
         updated = true;
@@ -69,9 +78,14 @@ module.exports = async (req, res) => {
           id: user.id,
           name: user.name,
           profilePhoto: user.profilePhoto,
-          commentText, // <- this matches your updated schema
+          commentText,
         });
         post.commentsCounts = post.comments.length;
+        notification = {
+          type: "comment",
+          from: user,
+          message: `${user.name} commented on your post`,
+        };
         updated = true;
         break;
 
@@ -92,6 +106,11 @@ module.exports = async (req, res) => {
           post.shareBy.push(user);
         }
         post.shares += 1;
+        notification = {
+          type: "share",
+          from: user,
+          message: `${user.name} shared your post`,
+        };
         updated = true;
         break;
 
@@ -101,9 +120,35 @@ module.exports = async (req, res) => {
 
     if (updated) {
       await post.save();
+
+      // ✅ Save Notification if applicable
+      if (notification && postOwner && postOwner._id.toString() !== user.id) {
+        postOwner.notifications.push(notification);
+        await postOwner.save();
+
+        // ✅ Send Push Notification via FCM
+        if (postOwner.fcmToken) {
+          await admin.messaging().send({
+            token: postOwner.fcmToken,
+            notification: {
+              title: "New Notification",
+              body: notification.message,
+            },
+            data: {
+              type: notification.type,
+              fromUserId: user.id,
+              postId: postId,
+            },
+          });
+        }
+      }
     }
 
-    return res.status(200).json({ message: `Post ${action} successful`, post ,statusCode:200});
+    return res.status(200).json({
+      message: `Post ${action} successful`,
+      post,
+      statusCode: 200,
+    });
   } catch (err) {
     console.error("Action error:", err);
     return res.status(500).json({ message: `Server error: ${err.message}` });

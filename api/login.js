@@ -1,17 +1,17 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const User = require('./models/user'); // Adjust the path if needed
-const connectToDatabase = require('../utils'); // Ensure the database connection
+const User = require('./models/user');
+const connectToDatabase = require('../utils');
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') {
     return res.status(405).json({ message: 'Method Not Allowed' });
   }
 
-  const { email, password } = req.body;
+  const { email, password, fcmToken } = req.body; // 👈 Accept fcmToken from frontend
 
   try {
-    await connectToDatabase(); // Ensure database connection
+    await connectToDatabase();
 
     const user = await User.findOne({ email });
     if (!user) {
@@ -23,29 +23,34 @@ module.exports = async (req, res) => {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
-    // Generate JWT with required user data
+    // Generate JWT
     const token = jwt.sign(
       {
         email: user.email,
         id: user._id,
-        username: user.username, // or user.username, depending on your schema
-        profilePhotoUrl: user.profilePhotoUrl, // ensure this exists in User schema
+        username: user.username,
+        profilePhotoUrl: user.profilePhotoUrl,
       },
       process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
 
-    // Store token in user's tokens array
+    // Store token and fcmToken
     user.tokens.push({ token });
+
+    if (fcmToken && typeof fcmToken === 'string') {
+      user.fcmToken = fcmToken; // 👈 Save/update FCM token
+    }
+
     await user.save();
 
     res.status(200).json({
       message: 'Login successful',
       token,
       user: {
-        name: user.name,
+        name: user.username,
         email: user.email,
-        profilePhoto: user.profilePhoto,
+        profilePhoto: user.profilePhotoUrl,
       },
     });
   } catch (error) {

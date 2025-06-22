@@ -8,6 +8,7 @@ const userSchema = new mongoose.Schema({
   profilePhotoUrl: String,
   labelname:String,
   tokens: [{ token: String }],
+  fcmToken:String,
   isActive:Boolean,
   isDelete:Boolean,
   followers: [{ id: String, username: String, profilePhotoUrl: String }],

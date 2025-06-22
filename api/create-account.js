@@ -56,7 +56,8 @@ module.exports = async (req, res) => {
     const phoneNumber = fields.phoneNumber?.[0];
     const password = fields.password?.[0];
     const labelname = fields.labelname?.[0];
-    const profilePhoto = files.profilePhoto?.[0]; // single file
+    const profilePhoto = files.profilePhoto?.[0];
+    const fcmToken = fields.fcmToken?.[0]; // single file
 
     if (
       !username ||
@@ -129,13 +130,14 @@ module.exports = async (req, res) => {
         labelname,
         profilePhotoUrl,
         tokens: [{ token }],
+        fcmToken,
         isActive: true,
         isDelete: false,
         followers: [],
         following: [],
         requestsSent: [],
         requestsReceived: [],
-        recentSearches:[],
+        recentSearches: [],
       });
 
       await newUser.save();
