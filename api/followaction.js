@@ -2,7 +2,7 @@ require("dotenv").config();
 const mongoose = require("mongoose");
 const jwt = require("jsonwebtoken");
 const User = require("./models/user");
-const admin = require("../firebase");
+// const admin = require("../firebase");
 
 let isConnected = false;
 async function connectToDatabase() {
@@ -188,23 +188,23 @@ module.exports = async (req, res) => {
     await target.save();
 
     // ✅ Send FCM Notification if applicable
-    if (notification && target.fcmToken) {
-      try {
-        await admin.messaging().send({
-          token: target.fcmToken,
-          notification: {
-            title: "Notification",
-            body: notification.message,
-          },
-          data: {
-            type: notification.type,
-            fromUserId: meData.id,
-          },
-        });
-      } catch (error) {
-        console.error("FCM Error:", error.message);
-      }
-    }
+    // if (notification && target.fcmToken) {
+    //   try {
+    //     await admin.messaging().send({
+    //       token: target.fcmToken,
+    //       notification: {
+    //         title: "Notification",
+    //         body: notification.message,
+    //       },
+    //       data: {
+    //         type: notification.type,
+    //         fromUserId: meData.id,
+    //       },
+    //     });
+    //   } catch (error) {
+    //     console.error("FCM Error:", error.message);
+    //   }
+    // }
 
     return res.status(200).json({ message: actionMessage, statuscode: 200 });
   } catch (err) {
