@@ -122,26 +122,26 @@ module.exports = async (req, res) => {
       await post.save();
 
       // ✅ Save Notification if applicable
-      if (notification && postOwner && postOwner._id.toString() !== user.id) {
-        postOwner.notifications.push(notification);
-        await postOwner.save();
+      // if (notification && postOwner && postOwner._id.toString() !== user.id) {
+      //   postOwner.notifications.push(notification);
+      //   await postOwner.save();
 
-        // ✅ Send Push Notification via FCM
-        if (postOwner.fcmToken) {
-          await admin.messaging().send({
-            token: postOwner.fcmToken,
-            notification: {
-              title: "New Notification",
-              body: notification.message,
-            },
-            data: {
-              type: notification.type,
-              fromUserId: user.id,
-              postId: postId,
-            },
-          });
-        }
-      }
+      // ✅ Send Push Notification via FCM
+      //   if (postOwner.fcmToken) {
+      //     await admin.messaging().send({
+      //       token: postOwner.fcmToken,
+      //       notification: {
+      //         title: "New Notification",
+      //         body: notification.message,
+      //       },
+      //       data: {
+      //         type: notification.type,
+      //         fromUserId: user.id,
+      //         postId: postId,
+      //       },
+      //     });
+      //   }
+      // }
     }
 
     return res.status(200).json({
