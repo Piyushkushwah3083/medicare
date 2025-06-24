@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const jwt = require("jsonwebtoken");
 const Post = require("./models/post");
 const User = require("./models/user");
-const admin = require("../firebase"); // Your initialized Firebase Admin instance
+// const admin = require("../firebase"); 
 
 let isConnected = false;
 async function connectToDatabase() {
