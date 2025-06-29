@@ -8,7 +8,7 @@ module.exports = async (req, res) => {
     return res.status(405).json({ message: 'Method Not Allowed' });
   }
 
-  const { email, password, fcmToken } = req.body; // 👈 Accept fcmToken from frontend
+  const { email, password, fcmToken } = req.body;
 
   try {
     await connectToDatabase();
@@ -23,11 +23,11 @@ module.exports = async (req, res) => {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
-    // Generate JWT
+    // ✅ Generate JWT with _id (for senderId in chats)
     const token = jwt.sign(
       {
+        _id: user._id, // <- FIXED
         email: user.email,
-        id: user._id,
         username: user.username,
         profilePhotoUrl: user.profilePhotoUrl,
       },
@@ -35,11 +35,12 @@ module.exports = async (req, res) => {
       { expiresIn: '7d' }
     );
 
-    // Store token and fcmToken
+    // ✅ Save token
     user.tokens.push({ token });
 
+    // ✅ Update FCM token if provided
     if (fcmToken && typeof fcmToken === 'string') {
-      user.fcmToken = fcmToken; // 👈 Save/update FCM token
+      user.fcmToken = fcmToken;
     }
 
     await user.save();
@@ -48,6 +49,7 @@ module.exports = async (req, res) => {
       message: 'Login successful',
       token,
       user: {
+        _id: user._id,
         name: user.username,
         email: user.email,
         profilePhoto: user.profilePhotoUrl,
@@ -55,6 +57,6 @@ module.exports = async (req, res) => {
     });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ message: 'Server error', error });
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 };

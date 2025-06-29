@@ -28,8 +28,6 @@ async function connectToDatabase() {
     await mongoose.connect(process.env.MONGODB_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
-      serverSelectionTimeoutMS: 5000,
-      socketTimeoutMS: 45000,
     });
     isConnected = true;
     console.log("✅ Connected to MongoDB");
@@ -57,7 +55,7 @@ module.exports = async (req, res) => {
     const password = fields.password?.[0];
     const labelname = fields.labelname?.[0];
     const profilePhoto = files.profilePhoto?.[0];
-    const fcmToken = fields.fcmToken?.[0]; // single file
+    const fcmToken = fields.fcmToken?.[0];
 
     if (
       !username ||
@@ -112,16 +110,7 @@ module.exports = async (req, res) => {
       // Hash password
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      // Create JWT
-      const token = jwt.sign(
-        { email, profilePhotoUrl, username },
-        process.env.JWT_SECRET,
-        {
-          expiresIn: "7d",
-        }
-      );
-
-      // Save user to DB
+      // Create and save user first
       const newUser = new User({
         username,
         email,
@@ -129,7 +118,7 @@ module.exports = async (req, res) => {
         password: hashedPassword,
         labelname,
         profilePhotoUrl,
-        tokens: [{ token }],
+        tokens: [],
         fcmToken,
         isActive: true,
         isDelete: false,
@@ -142,9 +131,26 @@ module.exports = async (req, res) => {
 
       await newUser.save();
 
+      // Now generate token with _id included
+      const token = jwt.sign(
+        {
+          _id: newUser._id,
+          email,
+          username,
+          profilePhotoUrl,
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: "7d" }
+      );
+
+      // Optional: Store token in user's tokens array
+      newUser.tokens.push({ token });
+      await newUser.save();
+
       res.status(201).json({
         message: "User account created successfully",
         token,
+        userId: newUser._id,
         profilePhotoUrl,
       });
     } catch (error) {
