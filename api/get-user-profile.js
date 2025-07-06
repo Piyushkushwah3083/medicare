@@ -67,11 +67,21 @@ module.exports = async (req, res) => {
     }
 
     // Fetch posts from this user
-    const posts = await Post.find({ name: profileUser.username })
+    const rawPosts = await Post.find({ name: profileUser.username })
       .sort({ createdAt: -1 })
-      .select("description media likecount commentsCounts createdAt");
+      .select("name description media likecount commentsCounts createdAt");
 
-    // Build response
+    // Enrich posts with isVerified
+    const posts = await Promise.all(
+      rawPosts.map(async (post) => {
+        const author = await User.findOne({ username: post.name }).select("isVerified");
+        return {
+          ...post.toObject(),
+          isVerified: author?.isVerified || false,
+        };
+      })
+    );
+
     return res.status(200).json({
       profile: {
         id: profileUser._id,
@@ -85,6 +95,7 @@ module.exports = async (req, res) => {
         requestsSentCount: profileUser.requestsSent.length,
         requestsReceivedCount: profileUser.requestsReceived.length,
       },
+      isVerified: profileUser.isVerified,
       followStatus: { status, buttonText },
       posts,
       followers: profileUser.followers,

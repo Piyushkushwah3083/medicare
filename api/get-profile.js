@@ -4,6 +4,7 @@ const jwt = require("jsonwebtoken");
 const User = require("./models/user");
 
 let isConnected = false;
+
 async function connectToDatabase() {
   if (isConnected) return;
   try {
@@ -22,42 +23,36 @@ async function connectToDatabase() {
 }
 
 module.exports = async (req, res) => {
-  if (req.method === "GET") {
-    try {
-      await connectToDatabase();
+  if (req.method !== "GET") {
+    return res.status(405).json({ message: "Method Not Allowed" });
+  }
 
-      const authHeader = req.headers.authorization;
-      if (!authHeader || !authHeader.startsWith("Bearer ")) {
-        return res
-          .status(401)
-          .json({ message: "Authorization token missing or invalid" });
-      }
+  try {
+    await connectToDatabase();
 
-      const token = authHeader.split(" ")[1];
-
-      let decoded;
-      try {
-        decoded = jwt.verify(token, process.env.JWT_SECRET);
-      } catch (err) {
-        return res.status(401).json({ message: "Invalid or expired token" });
-      }
-
-      // Explicitly select desired fields including _id
-      const user = await User.findOne({ email: decoded.email }).select(
-        "username email phoneNumber labelname profilePhotoUrl _id followers following requestsSent requestsReceived "
-      );
-
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-
-      // Send user data
-      res.status(200).json({ user });
-    } catch (error) {
-      console.error("Error fetching user profile:", error);
-      res.status(500).json({ message: `Server error: ${error.message}` });
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ message: "Authorization token missing or invalid" });
     }
-  } else {
-    res.status(405).json({ message: "Method Not Allowed" });
+
+    const token = authHeader.split(" ")[1];
+    let decoded;
+
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (err) {
+      return res.status(401).json({ message: "Invalid or expired token" });
+    }
+
+    // Fetch all fields of the user
+    const user = await User.findOne({ email: decoded.email });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    return res.status(200).json({ user, statusCode: 200 });
+  } catch (error) {
+    console.error("Error fetching user profile:", error);
+    return res.status(500).json({ message: `Server error: ${error.message}`, statusCode: 500 });
   }
 };

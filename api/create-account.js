@@ -122,6 +122,7 @@ module.exports = async (req, res) => {
         fcmToken,
         isActive: true,
         isDelete: false,
+        isVerified:false,
         followers: [],
         following: [],
         requestsSent: [],
